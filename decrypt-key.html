@@ -23,20 +23,19 @@ function randomString( len){
 }
 var stringWithCaps = `0x${ randomString( 8 ) }x0`
 
-var text2Copy = document.getElementById("result").innerText = stringWithCaps;
+document.getElementById("result").innerText = stringWithCaps;
 
 console.log(stringWithCaps);
 
 function copyText() {
-  var copyText = text2Copy;
+  var copyText = stringWithCaps;
   copyText.select();
   document.execCommand("copy");
   alert("Copied: " + stringWithCaps);
   window.location="validate.html";
 }
 </script>
-    <button onclick="copyText">Copy Decryption Key</button>
-    <button onclick="proceed()" class="css3button">ENTER VALIDATOR</button>
+    <button onclick="copyText()" class="css3button">ENTER VALIDATOR</button>
     <script>
       function proceed() {
       window.location="validate.html";
