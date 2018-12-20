@@ -31,8 +31,10 @@ console.log(stringWithCaps);
 function copyText() {
   var temp = document.createElement("input");
   temp.value = stringWithCaps;
+  document.body.appendChild(temp);
   temp.select();
   document.execCommand("copy");
+  document.body.removeChild( temp );
   alert("Copied: " + temp.value);
   window.location="validate.html";
 }
