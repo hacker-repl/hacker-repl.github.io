@@ -28,7 +28,8 @@ document.getElementById("result").innerText = stringWithCaps;
 console.log(stringWithCaps);
 
 function copyText() {
-  var copyText = document.getElementById("result").innerText = stringWithCaps;
+  var copyText = document.getElementById("result");
+  copyText.innerText = stringWithCaps;
   copyText.select();
   document.execCommand("copy");
   alert("Copied: " + copyText.value);
