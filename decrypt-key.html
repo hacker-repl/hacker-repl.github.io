@@ -28,10 +28,10 @@ document.getElementById("result").innerText = stringWithCaps;
 console.log(stringWithCaps);
 
 function copyText() {
-  var copyText = stringWithCaps;
+  var copyText = getElementById("result").innerText = stringWithCaps;
   copyText.select();
   document.execCommand("copy");
-  alert("Copied: " + stringWithCaps);
+  alert("Copied: " + copyText);
   window.location="validate.html";
 }
 </script>
