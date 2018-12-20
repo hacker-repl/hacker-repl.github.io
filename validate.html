@@ -13,14 +13,17 @@
   <div class="terminal">
   </div>
 </div>
+    <button type="submit" onclick="validator">VERIFY KEY</button>
    <script>
-    var validate = prompt("Please enter encryption key");
+    function validator() {
+      var validate = prompt("Please enter encryption key");
 
-    if (validate.startsWith("0x") && validate.endsWith("x0")) {
-      window.location="success.html";
-    }
-    else {
-      window.location="failure.html";
+      if (validate.startsWith("0x") && validate.endsWith("x0")) {
+        window.location="success.html";
+      }
+      else {
+        window.location="failure.html";
+      }
     }
    </script>
 </body>
