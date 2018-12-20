@@ -9,18 +9,22 @@
     <link href="style.css" rel="stylesheet" type="text/css" />
   </head>
   <body>
+    <h1 id="result"></h1>
     <div class="terminalwrapper">
-  <div class="terminal">
+      <div class="terminal">
+      </div>
   </div>
-</div>
 <script>
-var letters =“abcdefghijklmnop1234567890”;
+const letters = "abcdefghijklmnop1234567890";
 function randomString( len){
     return new Array( len ).fill( ()=>{
           return letters[ Math.floor( Math.random()*letters.length ) ];
-     });
+     }).map( (x)=>{ return x(); } ).join('');
 }
-var stringWithCaps = `0x${ randomString( 8 ) }x0
+var stringWithCaps = `0x${ randomString( 8 ) }x0`
+
+document.getElementById("result").innerText = stringWithCaps;
+
 console.log(stringWithCaps);
 </script>
   </body>
