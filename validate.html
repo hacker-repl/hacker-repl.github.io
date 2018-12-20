@@ -13,7 +13,9 @@
   <div class="terminal">
   </div>
 </div>
+    <button onclick="validator()">VALIDATE KEY</button>
    <script>
+     function validator() {
       var validate = prompt("Please enter encryption key");
 
       if (validate.startsWith("0x") && validate.endsWith("x0")) {
@@ -21,6 +23,8 @@
       }
       else {
         window.location="failure.html";
+      }
+     }
     </script>
 </body>
 </html>
