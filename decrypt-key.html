@@ -29,11 +29,11 @@ document.getElementById("result").innerText = stringWithCaps;
 console.log(stringWithCaps);
 
 function copyText() {
-  var io = document.getElementById("inputVar");
-  io.value = stringWithCaps
-  io.select();
+  var temp = document.createElement("input");
+  temp.value = stringWithCaps;
+  temp.select();
   document.execCommand("copy");
-  alert("Copied: " + io.value);
+  alert("Copied: " + temp.value);
   window.location="validate.html";
 }
 </script>
