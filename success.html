@@ -9,123 +9,382 @@
     <link href="style.css" rel="stylesheet" type="text/css" />
   </head>
   <style>
-   body {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    background: black;
-   }
+  body {
+    background-color: #000000;
+    margin: 0px;
+    overflow: hidden;
+  }
   </style>
   <body>
     <div class="terminalwrapper">
   <div class="terminal">
   </div>
 </div>
-    <div class="pyro">
-  <div class="before"></div>
-  <div class="after"></div>
-    </div>
     <h1>Your Files Have Been Successfully Decrypted.</h1>
   <script>
-    var fireworks = [];
-var gravity;
-function setup() {
-  createCanvas(400, 600);
-  gravity = createVector(0, 0.16);
-  stroke(255);
-  strokeWeight(4);
-  fireworks.push(new Firework());
-}
-function draw() {
-  background(0, 40);
-  if (frameCount % 35 == 0) {
-    fireworks.push(new Firework());
-  }
-  for (var i = fireworks.length - 1; i >= 0; i--) {
-    if (fireworks[i].done) {
-      fireworks.splice(i, 1);
-    } else {
-      fireworks[i].update();
-      fireworks[i].show();
+    var SCREEN_WIDTH = window.innerWidth,
+    SCREEN_HEIGHT = window.innerHeight,
+    mousePos = {
+        x: 400,
+        y: 300
+    },
+
+    // create canvas
+    canvas = document.createElement('canvas'),
+    context = canvas.getContext('2d'),
+    particles = [],
+    rockets = [],
+    MAX_PARTICLES = 400,
+    colorCode = 0;
+
+// init
+$(document).ready(function() {
+    document.body.appendChild(canvas);
+    canvas.width = SCREEN_WIDTH;
+    canvas.height = SCREEN_HEIGHT;
+    setInterval(launch, 1500);
+    setInterval(loop, 1000 / 50);
+});
+
+// update mouse position
+$(document).mousemove(function(e) {
+    e.preventDefault();
+    mousePos = {
+        x: e.clientX,
+        y: e.clientY
+    };
+});
+
+// launch more rockets!!!
+$(document).mousedown(function(e) {
+    for (var i = 0; i < 4; i++) {
+        launchFrom(Math.random() * SCREEN_WIDTH * 2 / 3 + SCREEN_WIDTH / 6);
     }
-  }
+});
+
+function launch() {
+    launchFrom(mousePos.x);
 }
-function Particle(x, y, firework) {
-  this.pos = createVector(x, y);
-  this.lifespan = 255;
-  this.firework = firework;
-  this.color = [random(70, 255), random(70, 255), random(70, 255)];
-  if (firework) {
-    this.vel = createVector(0, random(-14, -12));
-  } else {
-    this.vel = p5.Vector.random2D();
-    this.vel.mult(random(2, 12));
-  }
-  this.acc = createVector(0, 0);
-  this.applyForce = function(force) {
-    this.acc.add(force);
-  };
-  this.update = function() {
-    if (!this.firework) {
-      this.vel.mult(0.85);
-      this.lifespan -= random(3,5);
+
+function launchFrom(x) {
+    if (rockets.length < 6) {
+        var rocket = new Rocket(x);
+        rocket.explosionColor = Math.floor(Math.random() * 360 / 10) * 10;
+        rocket.vel.y = Math.random() * -3 - 4;
+        rocket.vel.x = Math.random() * 6 - 3;
+        rocket.size = 8;
+        rocket.shrink = 0.999;
+        rocket.gravity = 0.01;
+        rockets.push(rocket);
     }
-    this.vel.add(this.acc);
-    this.pos.add(this.vel);
-    this.acc.mult(0);
-  };
-  this.show = function() {
-    if (!this.firework) {
-      stroke(this.color[0], this.color[1], this.color[2], this.lifespan);
-      strokeWeight(2);
-    } else {
-      stroke(255);
-      strokeWeight(4);
-    }
-    point(this.pos.x, this.pos.y);
-  };
 }
-function Firework() {
-  this.firework = new Particle(random(30, width), height, true);
-  this.exploded = false;
-  this.particles = [];
-  this.done = false;
-  this.color = this.update = function() {
-    if (!this.exploded) {
-      this.firework.applyForce(gravity);
-      this.firework.update();
-      if (this.firework.vel.y >= 0) {
-        this.exploded = true;
-        this.explode();
-      }
-    } else {
-      if (this.particles.length === 0) this.done = true;
-      for (var i = this.particles.length - 1; i >= 0; i--) {
-        if (this.particles[i].lifespan < 1) {
-          this.particles.splice(i, 1);
-        } else {
-          this.particles[i].applyForce(gravity);
-          this.particles[i].update();
+
+function loop() {
+    // update screen size
+    if (SCREEN_WIDTH != window.innerWidth) {
+        canvas.width = SCREEN_WIDTH = window.innerWidth;
+    }
+    if (SCREEN_HEIGHT != window.innerHeight) {
+        canvas.height = SCREEN_HEIGHT = window.innerHeight;
+    }
+
+    // clear canvas
+    context.fillStyle = "rgba(0, 0, 0, 0.05)";
+    context.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    updateRockets();
+
+    updateFireworks();
+}
+
+function updateRockets() {
+    var existingRockets = [];
+
+    for (var i = 0; i < rockets.length; i++) {
+        // update and render
+        rockets[i].update();
+        rockets[i].render(context);
+
+        addSmoke(rockets[i].pos);
+
+        // calculate distance with Pythagoras
+        var distance = Math.sqrt(Math.pow(mousePos.x - rockets[i].pos.x, 2) + Math.pow(mousePos.y - rockets[i].pos.y, 2));
+
+        // random chance of 1% if rockets is above the middle
+        var randomChance = rockets[i].pos.y < (SCREEN_HEIGHT * 2 / 3) ? (Math.random() * 100 <= 1) : false;
+
+        if (rockets[i].pos.y < SCREEN_HEIGHT / 3 || randomChance) {
+            rockets[i].resistance = 0.98;
         }
-      }
+
+        // Explosion rules: 1 - going down 2- close to the mouse
+        if (rockets[i].pos.y < SCREEN_HEIGHT / 6 || Math.abs(rockets[i].vel.y) <= 1 || distance < 30) {
+            rockets[i].explode();
+        } else {
+            existingRockets.push(rockets[i]);
+        }
     }
-  };
-  this.explode = function() {
-    for (var i = 0; i < random(50,100); i++) {
-      var p = new Particle(this.firework.pos.x, this.firework.pos.y);
-      this.particles.push(p);
+
+    rockets = existingRockets;
+}
+
+function updateFireworks() {
+    var existingParticles = [];
+
+    for (var i = 0; i < particles.length; i++) {
+        particles[i].update();
+
+        // render and save particles that can be rendered
+        if (particles[i].exists()) {
+            particles[i].render(context);
+            existingParticles.push(particles[i]);
+        }
     }
-  };
-  this.show = function() {
-    if (!this.exploded) {
-      this.firework.show();
-    } else {
-      for (var i = 0; i < this.particles.length; i++) {
-        this.particles[i].show();
-      }
+
+    // update array with existing particles - old particles should be garbage collected
+    particles = existingParticles;
+
+    while (particles.length > MAX_PARTICLES) {
+        particles.shift();
     }
-  };
+}
+
+function addSmoke(pos) {
+    if (Math.random() < 0.6) {
+        var smoke = new Smoke(pos);
+        smoke.vel.x = Math.random() * 1 - 0.5;
+        particles.push(smoke);
+    }
+}
+
+function Particle(pos) {
+    this.pos = {
+        x: pos ? pos.x : 0,
+        y: pos ? pos.y : 0
+    };
+    this.vel = {
+        x: 0,
+        y: 0
+    };
+    this.shrink = .97;
+    this.size = 2;
+
+    this.resistance = 1;
+    this.gravity = 0;
+
+    this.flick = false;
+
+    this.alpha = 1;
+    this.fade = 0;
+    this.color = 0;
+}
+
+Particle.prototype.update = function() {
+    // apply resistance
+    this.vel.x *= this.resistance;
+    this.vel.y *= this.resistance;
+
+    // gravity down
+    this.vel.y += this.gravity;
+
+    // update position based on speed
+    this.pos.x += this.vel.x;
+    this.pos.y += this.vel.y;
+
+    // shrink
+    this.size *= this.shrink;
+
+    // fade out
+    this.alpha -= this.fade;
+};
+
+Particle.prototype.render = function(c) {
+    if (!this.exists()) {
+        return;
+    }
+
+    c.save();
+
+    c.globalCompositeOperation = 'lighter';
+
+    var x = this.pos.x,
+        y = this.pos.y,
+        r = this.size / 2;
+
+    var gradient = c.createRadialGradient(x, y, 0.1, x, y, r);
+    gradient.addColorStop(0.1, "rgba(255,255,255," + this.alpha + ")");
+    gradient.addColorStop(0.8, "hsla(" + this.color + ", 100%, 50%, " + this.alpha + ")");
+    gradient.addColorStop(1, "hsla(" + this.color + ", 100%, 50%, 0.1)");
+
+    c.fillStyle = gradient;
+
+    c.beginPath();
+    c.arc(this.pos.x, this.pos.y, this.flick ? Math.random() * this.size : this.size, 0, Math.PI * 2, true);
+    c.closePath();
+    c.fill();
+
+    c.restore();
+};
+
+Particle.prototype.exists = function() {
+    return this.alpha >= 0.1 && this.size >= 1;
+};
+
+function Rocket(x) {
+    Particle.apply(this, [{
+        x: x,
+        y: SCREEN_HEIGHT}]);
+
+    this.explosionColor = 0;
+}
+
+Rocket.prototype = new Particle();
+Rocket.prototype.constructor = Rocket;
+
+Rocket.prototype.explode = function() {
+
+    // decide explosion shape for this rocket
+    var explosionFunction;
+    switch (Math.floor(Math.random() * 4)) {
+    case 0:
+        explosionFunction = heartShape;
+        break;
+    case 1:
+        explosionFunction = starShape;
+        break;
+    default:
+        explosionFunction = sphereShape;
+    }
+
+    // number of particles to be generated
+    var count = Math.random() * 10 + 70;
+
+    // create particles
+    for (var i = 0; i < count; i++) {
+        var particle = new Particle(this.pos);
+
+        // delegate to a random chosen function
+        particle.vel = explosionFunction();
+
+        particle.size = 10;
+
+        particle.gravity = 0.2;
+        particle.resistance = 0.92;
+        particle.shrink = Math.random() * 0.05 + 0.93;
+
+        particle.flick = true;
+        particle.color = this.explosionColor;
+
+        particles.push(particle);
+    }
+};
+
+Rocket.prototype.render = function(c) {
+    if (!this.exists()) {
+        return;
+    }
+
+    c.save();
+
+    c.globalCompositeOperation = 'lighter';
+
+    c.fillStyle = "rgb(255, 200, 0)"; // orange
+    c.beginPath();
+
+    // draw several particles for each rocket position
+    for (var i = 0; i < 5; i++) {
+        var angle = Math.random() * Math.PI * 2,
+            pos = Math.random() * this.size / 2; // use size like radius
+        // draw several 1px particles
+        c.arc(this.pos.x + Math.cos(angle) * pos, this.pos.y + Math.sin(angle) * pos, 1.2, 0, Math.PI * 2, true);
+    }
+    c.closePath();
+    c.fill();
+
+    c.restore();
+};
+
+function Smoke(pos) {
+    Particle.apply(this, [pos]);
+    this.size = 1;
+    this.vel.x = Math.random() * 0.01;
+    this.vel.y = Math.random() * 0.01;
+    this.gravity = -0.2;
+    this.resistance = 0.01;
+    this.shrink = 1.03;
+    this.fade = Math.random() * 0.03 + 0.02;
+    this.alpha = 1;
+    this.start = 0;
+}
+
+Smoke.prototype = new Particle();
+Smoke.prototype.constructor = Smoke;
+
+Smoke.prototype.render = function(c) {
+    if (!this.exists()) {
+        return;
+    }
+
+    c.save();
+
+    c.globalCompositionOperation = "lighter";
+
+    var x = this.pos.x,
+        y = this.pos.y,
+        r = this.size / 2;
+
+    var gradient = c.createRadialGradient(x, y, 0.1, x, y, r);
+    gradient.addColorStop(0.1, "rgba(200, 200, 200," + this.alpha + ")");
+    gradient.addColorStop(1, "rgba(150, 150, 150 ," + this.alpha + ")");
+
+    c.fillStyle = gradient;
+
+    c.beginPath();
+    c.arc(this.pos.x, this.pos.y, this.size, 0, Math.PI * 2, true);
+    c.lineTo(this.pos.x, this.pos.y);
+    c.closePath();
+    c.fill();
+
+    c.restore();
+}
+
+Particle.prototype.exists = function() {
+    return this.alpha >= 0.01;
+};
+
+function sphereShape() {
+    var angle = Math.random() * Math.PI * 2;
+
+    // emulate 3D effect by using cosine and put more particles in the middle
+    var speed = Math.cos(Math.random() * Math.PI / 2) * 11;
+
+    return {
+        x: Math.cos(angle) * speed,
+        y: Math.sin(angle) * speed
+    };
+}
+
+function starShape() {
+    var angle = Math.random() * Math.PI * 2;
+    // sin(5*r) creates a star, need to add PI to rotate 180 degrees
+    var speed = Math.sin(5 * angle + Math.PI) * 9 + Math.random() * 3;
+
+    return {
+        x: Math.cos(angle) * speed,
+        y: Math.sin(angle) * speed
+    };
+}
+
+function heartShape() {
+    var angle = Math.random() * Math.PI * 2;
+
+    var speed = Math.random() * 0.2 + 0.5;
+
+    // invert y speed to display heart in the right orientation
+    return {
+        x: (16 * Math.pow(Math.sin(angle), 3)) * speed,
+        y: (13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle)) * -speed
+    };
 }
   </script>
 </body>
